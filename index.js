@@ -8,8 +8,8 @@ const vec3 = require('vec3');
 // Dependencies --
 
 minecraft = {
-	serveraddress: "myserver.com",
-	ingamedefaultpass: "ABCDEFGHIJKL",
+	serveraddress: "serveraddress",
+	ingamedefaultpass: "ingamedefaultpass",
 	users: {},
 	clearuserdata: function (_id) {
 		if (typeof minecraft.users[_id] !== "undefined") {
@@ -474,8 +474,7 @@ minecraft = {
 	}
 }
 
-minecraft.adduser("MrRobotic", false).then(function(data) {
-	// minecraft.users[data._id].temp.eatfoodautomatically = false;
+minecraft.adduser("MrRobotic", true).then(function(data) {
 	minecraft.users[data._id].mf.on("chat", function(username, message) {
 		if (message.toLowerCase().startsWith("kill ")) {
 			var target = message.split("kill ")[1].trim();
@@ -484,17 +483,17 @@ minecraft.adduser("MrRobotic", false).then(function(data) {
 			} else {
 				minecraft.users[data._id].temp.functions.killPlayer(target, true).then(function(res) {
 					if (res == 1) {
-						minecraft.users[data._id].mf.chat(`Target ${target} was terminated`);
+						minecraft.users[data._id].mf.chat(`Termination Result: Target ${target} was terminated`);
 					} else if (res == 0) {
-						minecraft.users[data._id].mf.chat("Retreated due to low health");
+						minecraft.users[data._id].mf.chat("Termination Result: Retreated due to low health");
 					} else if (res == 2) {
-						minecraft.users[data._id].mf.chat("No such player");
+						minecraft.users[data._id].mf.chat("Termination Result: No such player");
 					} else if (res == 3) {
-						minecraft.users[data._id].mf.chat("Invalid Target");
+						minecraft.users[data._id].mf.chat("Termination Result: Invalid Target");
 					} else if (res == 4) {
-						minecraft.users[data._id].mf.chat(`Target ${target} left the server`);
+						minecraft.users[data._id].mf.chat(`Termination Result: Target ${target} left the server`);
 					} else if (res == 5) {
-						minecraft.users[data._id].mf.chat(`Location of target ${target} is unknown`);
+						minecraft.users[data._id].mf.chat(`Termination Result: Location of target ${target} is unknown`);
 					}
 				});
 			}
