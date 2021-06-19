@@ -1,5 +1,5 @@
-// Mineflayer Terminator Bot by SublimeHawk6
-// 12/06/2020
+/* callum fisher - corbex11@gmail.com
+last updated: 12/06/2020 */
 
 // Dependencies ++
 const mineflayer = require('mineflayer');
