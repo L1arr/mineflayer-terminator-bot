@@ -926,11 +926,9 @@ minecraft = {
 					console.log(`User #${_id} (${username}) weather update: No rain`);
 				}
 			});
-			// minecraft.users[_id].mf.on('entitySpawn', function (entity) { // handle entity spawns:
-			// if (entity.type == "mob" && entity.mobType == "Creeper" && entity.position.y == minecraft.users[_id].mf.players[username].entity.position.y) {
-			// minecraft.users[_id].mf.chat("creeper aw man");
-			// }
-			// });
+			/* minecraft.users[_id].mf.on('entitySpawn', function (entity) { // handle entity spawns:
+				if (entity.type == "mob" && entity.mobType == "Creeper" && entity.position.y == minecraft.users[_id].mf.players[username].entity.position.y) minecraft.users[_id].mf.chat("creeper aw man")
+			}); */
 			minecraft.users[_id].mf.on("health", function() { // health update:
 				console.log(`User #${_id} (${username}) health update: ${minecraft.users[_id].mf.health}/20 health, ${minecraft.users[_id].mf.food}/20 food.`);
 			});
