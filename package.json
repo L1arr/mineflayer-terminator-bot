@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "edit-json-file": "^1.6.0",
     "mineflayer": "^2.19.0",
     "mineflayer-bloodhound": "0.0.2",
     "mineflayer-navigate": "0.0.10"
