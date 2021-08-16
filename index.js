@@ -33,27 +33,28 @@ dirs.forEach(dir => { // Create missing directories:
 
 const config = editJsonFile("./config.json");
 if (config.data.firstTimeRun == undefined) {
-    config.set("firstTimeRun", true)
+    config.set("firstTimeRun", true);
 } else if (config.data.firstTimeRun) {
-    config.set("firstTimeRun", false)
+    config.set("firstTimeRun", false);
 }
 Object.keys(conKeys).forEach(key => { // Check the keys currently in the configuration file for missing keys and add those missing keys:
 	if (!Object.keys(config.data).includes(key)) {
-		console.log(`${module_prefix} [configuration] > Adding missing key "${key}" with value: ${JSON.stringify(conKeys[key])}`)
-		config.set(key, conKeys[key])
+		console.log(`${module_prefix} [configuration] > Adding missing key "${key}" with value: ${JSON.stringify(conKeys[key])}`);
+		config.set(key, conKeys[key]);
 	}
 });
 Object.keys(config.data).forEach(key => { // Check the keys currently in the configuration file for unknown keys and remove those unknown keys:
 	if (!Object.keys(conKeys).includes(key)) {
-		console.log(`${module_prefix} [configuration] > Removing unknown key "${key}"`)
-		delete config.data[key]
+		console.log(`${module_prefix} [configuration] > Removing unknown key "${key}"`);
+		delete config.data[key];
 	}
 });
-console.log(`${module_prefix} [configuration] >> Using the following options:`)
+console.log(`${module_prefix} [configuration] >> Using the following options:`);
 Object.keys(config.data).forEach(key => { // Print out the key values being used:
-		console.log(`${module_prefix} [configuration] - ${key}: ${JSON.stringify(config.data[key])}`)
+		console.log(`${module_prefix} [configuration] - ${key}: ${JSON.stringify(config.data[key])}`);
 });
 config.save();
+
 
 if (!config.data.configReady) {
 	console.log(`${module_prefix} Please fill in your configuration file (config.json), and try again.`);
@@ -63,15 +64,15 @@ if (!config.data.configReady) {
 	process.exit();
 }
 
+
 const log = require("./log.js");
 
 if (!fs.existsSync("./language/"+config.data.language+".json")) {
-	log.add(`${module_prefix} [localization] >> Selected language file "${config.data.language}.json" not found`);
+	log.add(`${module_prefix} [localization] >> Language file "${config.data.language}.json" not found`);
 } else {
-	log.add(`${module_prefix} [localization] >> Found localization file "${config.data.language}.json"`)
+	log.add(`${module_prefix} [localization] >> Found localization file "${config.data.language}.json"`);
+	const lang = require("./language/"+config.data.language+".json");
 }
-
-const lang = require("./language/"+config.data.language+".json");
 
 log.add(`${module_prefix} ${config.data.firstTimeRun ? lang.newuser || "Welcome!" : lang.olduser || "Welcome back." }`);
 log.add(`${module_prefix} ${lang.startapp || "Starting application.."}`);
