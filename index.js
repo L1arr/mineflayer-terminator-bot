@@ -69,9 +69,10 @@ const log = require("./log.js");
 
 if (!fs.existsSync("./language/"+config.data.language+".json")) {
 	log.add(`${module_prefix} [localization] >> Language file "${config.data.language}.json" not found`);
+	lang = {};
 } else {
 	log.add(`${module_prefix} [localization] >> Found localization file "${config.data.language}.json"`);
-	const lang = require("./language/"+config.data.language+".json");
+	lang = require("./language/"+config.data.language+".json");
 }
 
 log.add(`${module_prefix} ${config.data.firstTimeRun ? lang.newuser || "Welcome!" : lang.olduser || "Welcome back." }`);
