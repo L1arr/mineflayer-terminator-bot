@@ -39,5 +39,5 @@ function fetchDate() {
 }
 
 
-/*process.on('exit', exitHandler.bind(null,{cleanup:true}));
-process.on('SIGINT', exitHandler.bind(null, {exit:true}));*/
+/* process.on('exit', exitHandler.bind(null,{cleanup:true}));
+process.on('SIGINT', exitHandler.bind(null, {exit:true})); */

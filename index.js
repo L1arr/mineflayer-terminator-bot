@@ -1,5 +1,5 @@
 /* callum fisher - corbex11@gmail.com
-last updated: 26/7/21 */
+last updated: 18/8/21 */
 
 const editJsonFile = require("edit-json-file");
 const fs = require("fs");
@@ -11,17 +11,66 @@ console.log(`${module_prefix} Running.`);
 const conKeys = {
 	"configReady": false,
 	"firstTimeRun": true,
+	"quietLogging": true,
+	"serverHost": "",
+	"serverPort": "",
+	"username": "",
+	"password": "",
 	"inGamePassword": "",
-	"inGameUsername": "",
-	"serverAddress": "",
-	"language": "english"
+	"total": 1,
+	"version": "1.16.3",
+	"language": "english",
+	"knownItems": {
+		helmet: [ // low priority to high priority
+			"leather_helmet",
+			"iron_helmet",
+			"golden_helmet",
+			"diamond_helmet"
+		],
+		chestplate: [ // low priority to high priority
+			"leather_chestplate",
+			"iron_chestplate",
+			"golden_chestplate",
+			"diamond_chestplate"
+		],
+		leggings: [ // low priority to high priority
+			"leather_leggings",
+			"iron_leggings",
+			"golden_leggings",
+			"diamond_leggings"
+		],
+		boots: [ // low priority to high priority
+			"leather_boots",
+			"iron_boots",
+			"golden_boots",
+			"diamond_boots"
+		],
+		food: [ // low priority to high priority
+			"sweet_berries",
+			"bread",
+			"baked_potato",
+			"cooked_chicken",
+			"golden_apple"
+		],
+		weapon: [ // low priority to high priority
+			"wooden_axe",
+			"wooden_sword",
+			"stone_axe",
+			"stone_sword",
+			"iron_axe",
+			"iron_sword",
+			"golden_axe",
+			"golden_sword",
+			"diamond_sword",
+			"diamond_axe"
+		]
+	}
 }
 
 const dirs = [
 	"language",
 	"log"
 ];
-
 
 dirs.forEach(dir => { // Create missing directories:
     if (!fs.existsSync("./"+dir)) {
@@ -30,40 +79,40 @@ dirs.forEach(dir => { // Create missing directories:
 	}
 });
 
-
 const config = editJsonFile("./config.json");
+
 if (config.data.firstTimeRun == undefined) {
     config.set("firstTimeRun", true);
 } else if (config.data.firstTimeRun) {
     config.set("firstTimeRun", false);
 }
+
 Object.keys(conKeys).forEach(key => { // Check the keys currently in the configuration file for missing keys and add those missing keys:
 	if (!Object.keys(config.data).includes(key)) {
-		console.log(`${module_prefix} [configuration] > Adding missing key "${key}" with value: ${JSON.stringify(conKeys[key])}`);
+		if (!config.data.quietLogging) console.log(`${module_prefix} [configuration] > Adding missing key "${key}" with value: ${JSON.stringify(conKeys[key])}`);
 		config.set(key, conKeys[key]);
 	}
 });
+
 Object.keys(config.data).forEach(key => { // Check the keys currently in the configuration file for unknown keys and remove those unknown keys:
 	if (!Object.keys(conKeys).includes(key)) {
-		console.log(`${module_prefix} [configuration] > Removing unknown key "${key}"`);
+		if (!config.data.quietLogging) console.log(`${module_prefix} [configuration] > Removing unknown key "${key}"`);
 		delete config.data[key];
 	}
 });
-console.log(`${module_prefix} [configuration] >> Using the following options:`);
+
+if (!config.data.quietLogging) console.log(`${module_prefix} [configuration] >> Using the following options:`);
+
 Object.keys(config.data).forEach(key => { // Print out the key values being used:
-		console.log(`${module_prefix} [configuration] - ${key}: ${JSON.stringify(config.data[key])}`);
+	if (!config.data.quietLogging) console.log(`${module_prefix} [configuration] - ${key}: ${JSON.stringify(config.data[key])}`);
 });
+
 config.save();
 
-
 if (!config.data.configReady) {
-	console.log(`${module_prefix} Please fill in your configuration file (config.json), and try again.`);
-	console.log(`${module_prefix} Rellene el archivo de configuración (config.json) e inténtelo de nuevo.`); // spanish
-	console.log(`${module_prefix} Пожалуйста, заполните конфигурационный файл (config.json) и повторите попытку.`); // russian
-	console.log(`${module_prefix} Remplissez votre fichier de configuration (config.json), puis réessayez.`); // french
+	console.log(`${module_prefix} Please fill in your configuration file (config.json) and change "configReady" to "true".`);
 	process.exit();
 }
-
 
 const log = require("./log.js");
 
