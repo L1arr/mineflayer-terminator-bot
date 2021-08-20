@@ -20,30 +20,30 @@ terminator = {
             mf: mineflayer.createBot({
                 host: host || config.serverHost,
                 port: port || config.serverPort || undefined,
-				username: username || config.username || raName().toString(),
+                username: username || config.username || raName().toString(),
                 password: password || undefined,
-				version: version || config.version,
-				verbose: true,
-				checkTimeoutInterval: 0
-			}),
-            temp: {
-                isReady: false,
-                watch: true,
-				eatFood: true,
-				attackStatus: {
-					targeting: false,
-					target: "n/a"
-				},
-				knownItems: config.knownItems,
-				isEating: false,
-				inventoryBusy: false,
-				equipped: {
-					weapon: "n/a",
-					helmet: "n/a",
-					chestplate: "n/a",
-					leggings: "n/a",
-					boots: "n/a"
-				},
+                version: version || config.version,
+                verbose: true,
+                checkTimeoutInterval: 0
+            })
+        }
+        terminator.bots[id].temp = {
+            isReady: false,
+            watch: true,
+            eatFood: true,
+            attackStatus: {
+                targeting: false,
+                target: "n/a"
+            },
+            knownItems: config.knownItems,
+            isEating: false,
+            inventoryBusy: false,
+            equipped: {
+                weapon: "n/a",
+                helmet: "n/a",
+                chestplate: "n/a",
+                leggings: "n/a",
+                boots: "n/a"
             }
         }
         terminator.bots[id].temp.mcData = require('minecraft-data')(terminator.bots[id].mf.version);
