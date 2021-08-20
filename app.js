@@ -18,7 +18,7 @@ terminator = {
         var id = Object.keys(terminator.bots).length;
         terminator.bots[id] = {
             mf: mineflayer.createBot({
-				host: host || config.serverHost,
+                host: host || config.serverHost,
                 port: port || config.serverPort || undefined,
 				username: username || config.username || raName().toString(),
                 password: password || undefined,
