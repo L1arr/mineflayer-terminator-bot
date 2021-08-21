@@ -12,7 +12,7 @@ const modulePrefix = "[APP]";
 
 log.add(`${modulePrefix} Running.`);
 
-terminator = {
+var terminator = {
     bots: {},
     newBot: function(username, password, host, port, version) {
         var id = Object.keys(terminator.bots).length;
@@ -47,7 +47,16 @@ terminator = {
             }
         }
         terminator.bots[id].temp.mcData = require('minecraft-data')(terminator.bots[id].mf.version);
-        terminator.bots[id].mf.on('spawn', botSpawned(id));
+        terminator.bots[id].mf.on('spawn', function() {
+            log.add(`${modulePrefix} Bot #${id} (${terminator.bots[id].mf.username}) spawned.`);
+            if (!terminator.bots[id].temp.isReady) {
+                log.add(`${modulePrefix} Connected bot #${id} (${terminator.bots[id].mf.username}) to ${terminator.bots[id].mf.host}${terminator.bots[id].mf.port ? ":" + terminator.bots[id].mf.port : ""}`);
+                terminator.bots[id].temp.isReady = true;
+                terminator.bots[id].mf.chat(`/register ${config.inGamePassword} ${config.inGamePassword}`);
+                terminator.bots[id].mf.chat(`/login ${config.inGamePassword}`);
+                terminator.bots[id].mf.chat("test")
+            }
+        });
     }
 }
 
@@ -88,17 +97,6 @@ function getNearestEntityOnSameY (type, bot) {
         }
     }
     return best;
-}
-
-function botSpawned (id) {
-    log.add(`${modulePrefix} Bot #${id} (${terminator.bots[id].mf.username}) spawned.`);
-	if (!terminator.bots[id].temp.isReady) {
-		log.add(`${modulePrefix} Connected bot #${id} (${terminator.bots[id].mf.username}) to ${terminator.bots[id].mf.host}${terminator.bots[id].mf.port ? ":" + terminator.bots[id].mf.port : ""}`);
-		terminator.bots[id].temp.isReady = true;
-		terminator.bots[id].mf.chat(`/register ${config.inGamePassword} ${config.inGamePassword}`);
-		terminator.bots[id].mf.chat(`/login ${config.inGamePassword}`);
-        terminator.bots[id].mf.chat("test")
-	}
 }
 
 function equipItem (type, id) {
