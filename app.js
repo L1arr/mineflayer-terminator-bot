@@ -93,7 +93,7 @@ function getNearestEntityOnSameY (type, bot) {
 function botSpawned (id) {
     log.add(`${modulePrefix} Bot #${id} (${terminator.bots[id].mf.username}) spawned.`);
 	if (!terminator.bots[id].temp.isReady) {
-		log.add(`${modulePrefix} Connected bot #${id} (${terminator.bots[id].mf.username}) to ${host}${port ? ":" + port : ""}`);
+		log.add(`${modulePrefix} Connected bot #${id} (${terminator.bots[id].mf.username}) to ${terminator.bots[id].mf.host}${terminator.bots[id].mf.port ? ":" + terminator.bots[id].mf.port : ""}`);
 		terminator.bots[id].temp.isReady = true;
 		terminator.bots[id].mf.chat(`/register ${config.inGamePassword} ${config.inGamePassword}`);
 		terminator.bots[id].mf.chat(`/login ${config.inGamePassword}`);
