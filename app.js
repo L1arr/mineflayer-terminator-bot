@@ -28,15 +28,13 @@ var terminator = {
             })
         }
         terminator.bots[id].temp = {
+            id: id,
             isReady: false,
-            watch: true,
             eatFood: true,
-            attackStatus: {
-                targeting: false,
-                target: "n/a"
-            },
+            lookAround: true,
+            onMission: false,
+            target: undefined,
             knownItems: config.knownItems,
-            isEating: false,
             inventoryBusy: false,
             equipped: {
                 weapon: "n/a",
@@ -54,29 +52,76 @@ var terminator = {
                 terminator.bots[id].temp.isReady = true;
                 terminator.bots[id].mf.chat(`/register ${config.inGamePassword} ${config.inGamePassword}`);
                 terminator.bots[id].mf.chat(`/login ${config.inGamePassword}`);
-                terminator.bots[id].mf.chat("test")
+                terminator.bots[id].mf.chat("hello")
             }
         });
+        terminator.bots[id].mf.on('chat', function(username, message) {
+            processChat(username, message, terminator.bots[id]);
+        });
+        mfBloodhound(terminator.bots[id].mf);
+		terminator.bots[id].mf.bloodhound.yaw_correlation_enabled = false;
+		terminator.bots[id].mf.on('onCorrelateAttack', function (attacker, victim, weapon) {
+			processAttack(attacker, victim, weapon, terminator.bots[id]);
+		});
+        terminator.bots[id].switchLookingAt = setInterval(function() {
+            terminator.bots[id].temp.lookingAt = getRandomNearbyEntity(null, terminator.bots[id])
+        }, 6000)
+        terminator.bots[id].moveHead = setInterval(function() {
+            if (terminator.bots[id].temp.lookingAt && terminator.bots[id].temp.lookAround) {
+                terminator.bots[id].mf.lookAt(terminator.bots[id].temp.lookingAt.position.offset(0, terminator.bots[id].temp.lookingAt.height, 0));
+            }
+        }, 500)
     }
 }
 
-function getNearestEntity (type, bot) {
+function processAttack(attacker, victim, weapon, bot) {
+    if (victim == bot.mf.entity) { // if bot was attacked:
+        equipArmor(bot);
+        terminateTarget(attacker, bot);
+    }
+    // if (weapon) {
+        // terminator.bots[_id].mf.chat("Entity: "+ (victim.displayName || victim.username ) + " attacked by: " + (attacker.displayName|| attacker.username) + " with: " + weapon.displayName);
+    // } else {
+        // terminator.bots[_id].mf.chat("Entity: "+ (victim.displayName || victim.username ) + " attacked by: " + (attacker.displayName|| attacker.username) );
+    // }
+}
+
+function terminateTarget (target, bot) {
+    return new Promise(function(resolve, reject) {
+        if (target == bot.mf.entity) {
+            resolve(1); // cannot attack self
+        } else if (!bot.mf.entities[target] && !bot.mf.players[target.username]) {
+            resolve(2); // out of range / can't see target
+        } else {
+            equipArmor(bot);
+            bot.temp.lookAround = false;
+            bot.temp.onMission = true;
+            bot.temp.target = target;
+            var useWeapon = setInterval(function() {
+                equipItem("weapon", bot);
+                bot.mf.attack(target);
+            }, 1000);
+        }
+    });
+}
+
+function processChat(username, message, bot) {
+}
+
+function getRandomNearbyEntity (type, bot) {
     let id
     let entity
-    let dist
-    let best = null
-    let bestDistance = null
-    for (id in terminator.bots[bot].mf.entities) {
-        entity = terminator.bots[bot].mf.entities[id]
-        if (type && entity.type !== type) continue
-        if (entity === terminator.bots[bot].mf.entity) continue
-        dist = terminator.bots[bot].mf.entity.position.distanceTo(entity.position);
-        if (!best || dist < bestDistance) {
-            best = entity
-            bestDistance = dist
+    var candidates = [];
+    for (id in bot.mf.entities) {
+        entity = bot.mf.entities[id]
+        // if (type && entity.type !== type) continue
+        if (entity === bot.mf.entity) continue
+        if (entity.position.y < bot.mf.entity.position.y) continue // if entity is lower than bot Y + 1, ignore
+        if (bot.mf.entity.position.distanceTo(entity.position) < 10) {
+            candidates.push(entity);
         }
     }
-    return best;
+    return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
 function getNearestEntityOnSameY (type, bot) {
@@ -85,12 +130,12 @@ function getNearestEntityOnSameY (type, bot) {
     let dist
     let best = null
     let bestDistance = null
-    for (id in terminator.bots[bot].mf.entities) {
-        entity = terminator.bots[bot].mf.entities[id]
+    for (id in bot.mf.entities) {
+        entity = bot.mf.entities[id]
         if (type && entity.type !== type) continue
-        if (entity === terminator.bots[bot].mf.entity) continue
-        if (entity.position.y < terminator.bots[bot].mf.entity.position.y) continue // if entity is lower than bot Y + 1, ignore
-        dist = terminator.bots[id].mf.entity.position.distanceTo(entity.position);
+        if (entity === bot.mf.entity) continue
+        if (entity.position.y < bot.mf.entity.position.y) continue // if entity is lower than bot Y + 1, ignore
+        dist = bot.mf.entity.position.distanceTo(entity.position);
         if (!best || dist < bestDistance) {
             best = entity
             bestDistance = dist
@@ -99,47 +144,47 @@ function getNearestEntityOnSameY (type, bot) {
     return best;
 }
 
-function equipItem (type, id) {
+function equipItem (type, bot) {
     return new Promise(function(resolve, reject) { // 1 - equipped successfully, 0 - error occurred / doesn't have item
         var interval = setInterval(function() {
-            if (!terminator.bots[bot].temp.inventoryBusy) {
+            if (!bot.temp.inventoryBusy) {
                 clearInterval(interval);
-                terminator.bots[id].temp.inventoryBusy = true;
+                bot.temp.inventoryBusy = true;
                 var best = "";
-                for (var i = 0; i < Object.keys(terminator.bots[id].mf.inventory.slots).length; i++) {
-                    if (terminator.bots[id].mf.inventory.slots[i] !== null) {
-                        if (terminator.bots[id].temp.knownItems[type].includes(terminator.bots[id].mf.inventory.slots[i].name)) { // if this item is indexed:
+                for (var i = 0; i < Object.keys(bot.mf.inventory.slots).length; i++) {
+                    if (bot.mf.inventory.slots[i] !== null) {
+                        if (bot.temp.knownItems[type].includes(bot.mf.inventory.slots[i].name)) { // if this item is indexed:
                             if (best !== "") { // if another best item was previously found:
-                                if (terminator.bots[id].temp.knownItems[type].indexOf(terminator.bots[id].mf.inventory.slots[i].name) > terminator.bots[id].temp.knownItems[type].indexOf(best)) { // if it's of higher priority than the last item checked:
-                                    best = terminator.bots[id].mf.inventory.slots[i].name; // set new best item
+                                if (bot.temp.knownItems[type].indexOf(bot.mf.inventory.slots[i].name) > bot.temp.knownItems[type].indexOf(best)) { // if it's of higher priority than the last item checked:
+                                    best = bot.mf.inventory.slots[i].name; // set new best item
                                 }
                             } else { // otherwise if no best item has been set:
-                                best = terminator.bots[id].mf.inventory.slots[i].name; // set this item as the current best item
+                                best = bot.mf.inventory.slots[i].name; // set this item as the current best item
                             }
                         }
                     }
                 }
                 if (best) {
-                    if (terminator.bots[id].temp.equipped[type] !== best) {
-                        terminator.bots[id].temp.equipped[type] = best;
-                        log.add(`${modulePrefix} User #${id} (${terminators.bots[id].mf.username}) is equipping ${type} ${best}`);
-                        terminator.bots[id].mf.equip(terminator.bots[id].temp.mcData.itemsByName[best].id, type == "helmet" ? "head" : type == "chestplate" ? "torso" : type == "leggings" ? "legs" : type == "feet" ? "feet" : "hand", (err) => { // correlate the item's type to a body part and equip the chosen best item
+                    if (bot.temp.equipped[type] !== best) {
+                        bot.temp.equipped[type] = best;
+                        // log.add(`${modulePrefix} User #${bot.temp.id} (${terminator.bots[id].mf.username}) is equipping ${type} ${best}`);
+                        bot.mf.equip(bot.temp.mcData.itemsByName[best].id, type == "helmet" ? "head" : type == "chestplate" ? "torso" : type == "leggings" ? "legs" : type == "boots" ? "feet" : "hand", (err) => { // correlate the item's type to a body part and equip the chosen best item
                             if (err) {
                                 resolve(0);
-                                terminator.bots[id].temp.inventoryBusy = false;
+                                bot.temp.inventoryBusy = false;
                                 return console.log(err.message);
                             } else {
                                 resolve(1);
-                                terminator.bots[id].temp.inventoryBusy = false;
+                                bot.temp.inventoryBusy = false;
                             }
                         });
                     } else {
                         resolve(1);
-                        terminator.bots[id].temp.inventoryBusy = false;
+                        bot.temp.inventoryBusy = false;
                     }
                 } else {
                     resolve(0);
-                    terminator.bots[id].temp.inventoryBusy = false;
+                    bot.temp.inventoryBusy = false;
                 }
             }
         }, 800);
@@ -147,10 +192,10 @@ function equipItem (type, id) {
 }
 
 function equipArmor(bot) {
-    terminator.bots[bot].temp.functions.equip("helmet");
-    terminator.bots[bot].temp.functions.equip("chestplate");
-    terminator.bots[bot].temp.functions.equip("leggings");
-    terminator.bots[bot].temp.functions.equip("boots");
+    equipItem("helmet", bot);
+    equipItem("chestplate", bot);
+    equipItem("leggings", bot);
+    equipItem("boots", bot);
 }
 
 const adjectives = [
