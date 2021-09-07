@@ -5,6 +5,9 @@ const log = require("./log.js");
 const mineflayer = require("mineflayer");
 const mfNavigate = require("mineflayer-navigate")(mineflayer);
 const mfBloodhound = require("mineflayer-bloodhound")(mineflayer);
+const mfPathfinder = require('mineflayer-pathfinder').pathfinder;
+const Movements = require('mineflayer-pathfinder').Movements
+const { GoalNear, GoalBlock, GoalXZ, GoalY, GoalInvert, GoalFollow } = require('mineflayer-pathfinder').goals
 const vec3 = require("vec3");
 const config = require("./config.json");
 
@@ -44,6 +47,9 @@ var terminator = {
                 boots: "n/a"
             }
         }
+        mfBloodhound(terminator.bots[id].mf);
+        mfNavigate(terminator.bots[id].mf);
+        terminator.bots[id].mf.loadPlugin(mfPathfinder);
         terminator.bots[id].temp.mcData = require('minecraft-data')(terminator.bots[id].mf.version);
         terminator.bots[id].mf.on('spawn', function() {
             log.add(`${modulePrefix} Bot #${id} (${terminator.bots[id].mf.username}) spawned.`);
@@ -52,25 +58,53 @@ var terminator = {
                 terminator.bots[id].temp.isReady = true;
                 terminator.bots[id].mf.chat(`/register ${config.inGamePassword} ${config.inGamePassword}`);
                 terminator.bots[id].mf.chat(`/login ${config.inGamePassword}`);
-                terminator.bots[id].mf.chat("hello")
+                terminator.bots[id].mf.chat("hello");
             }
         });
         terminator.bots[id].mf.on('chat', function(username, message) {
             processChat(username, message, terminator.bots[id]);
         });
-        mfBloodhound(terminator.bots[id].mf);
 		terminator.bots[id].mf.bloodhound.yaw_correlation_enabled = false;
 		terminator.bots[id].mf.on('onCorrelateAttack', function (attacker, victim, weapon) {
 			processAttack(attacker, victim, weapon, terminator.bots[id]);
 		});
         terminator.bots[id].switchLookingAt = setInterval(function() {
-            terminator.bots[id].temp.lookingAt = getRandomNearbyEntity(null, terminator.bots[id])
+            if (terminator.bots[id].temp.lookAround) {
+                terminator.bots[id].temp.lookingAt = getRandomNearbyEntity(null, terminator.bots[id]);
+            } else {
+                terminator.bots[id].temp.lookingAt = undefined;
+            }
         }, 6000)
         terminator.bots[id].moveHead = setInterval(function() {
-            if (terminator.bots[id].temp.lookingAt && terminator.bots[id].temp.lookAround) {
+            if (terminator.bots[id].temp.lookingAt) {
                 terminator.bots[id].mf.lookAt(terminator.bots[id].temp.lookingAt.position.offset(0, terminator.bots[id].temp.lookingAt.height, 0));
             }
         }, 500)
+        terminator.bots[id].mf.navigate.on('pathPartFound', function(path) {
+            terminator.bots[id].mf.navigate.busy = true;
+            terminator.bots[id].temp.lookAround = false;
+        });
+        terminator.bots[id].mf.navigate.on('pathFound', function(path) {
+            terminator.bots[id].mf.navigate.busy = true;
+            terminator.bots[id].temp.lookAround = false;
+        });
+        terminator.bots[id].mf.navigate.on('cannotFind', function(closestPath) {
+            terminator.bots[id].mf.navigate.walk(closestPath);
+			terminator.bots[id].mf.navigate.busy = true;
+			terminator.bots[id].temp.lookAround = false;
+			setTimeout(function() {
+				terminator.bots[id].mf.navigate.busy = false;
+				terminator.bots[id].temp.lookAround = true;
+			}, 10000);
+        });
+        terminator.bots[id].mf.navigate.on('arrived', function() {
+            terminator.bots[id].mf.navigate.busy = false;
+			terminator.bots[id].temp.lookAround = true;
+        });
+        terminator.bots[id].mf.navigate.on('interrupted', function() {
+            terminator.bots[id].mf.navigate.busy = false;
+			terminator.bots[id].temp.lookAround = true;
+        });
     }
 }
 
@@ -79,33 +113,64 @@ function processAttack(attacker, victim, weapon, bot) {
         equipArmor(bot);
         terminateTarget(attacker, bot);
     }
-    // if (weapon) {
-        // terminator.bots[_id].mf.chat("Entity: "+ (victim.displayName || victim.username ) + " attacked by: " + (attacker.displayName|| attacker.username) + " with: " + weapon.displayName);
-    // } else {
-        // terminator.bots[_id].mf.chat("Entity: "+ (victim.displayName || victim.username ) + " attacked by: " + (attacker.displayName|| attacker.username) );
-    // }
 }
 
 function terminateTarget (target, bot) {
     return new Promise(function(resolve, reject) {
         if (target == bot.mf.entity) {
             resolve(1); // cannot attack self
-        } else if (!bot.mf.entities[target] && !bot.mf.players[target.username]) {
-            resolve(2); // out of range / can't see target
         } else {
-            equipArmor(bot);
+        if (target.username) {
+            if (!bot.mf.entities[target] && !bot.mf.players[target.username]) {
+                resolve(2); // out of range / can't see target
+                bot.mf.chat("can't see target")
+            }
+        }
+            bot.mf.chat("ouch")
+            var end = function () {
+                clearInterval(useWeapon);
+                clearInterval(checkCompletion);
+                bot.mf.pathfinder.stop();
+                bot.temp.lookAround = true;
+                bot.mf.chat("stopped")
+            }
             bot.temp.lookAround = false;
             bot.temp.onMission = true;
             bot.temp.target = target;
             var useWeapon = setInterval(function() {
-                equipItem("weapon", bot);
-                bot.mf.attack(target);
+                if (target.position.distanceTo(bot.mf.entity.position) < 6) {
+                    equipItem("weapon", bot);
+                    equipArmor(bot);
+                    bot.mf.attack(target);
+                }
             }, 1000);
-        }
+            var defaultMove = new Movements(bot.mf, bot.temp.mcData);
+            bot.mf.pathfinder.setMovements(defaultMove);
+            bot.mf.pathfinder.setGoal(new GoalFollow(target, target.type == "player" ? 1 : 3), true);
+            var checkCompletion = setInterval(function() {
+                if (0 >= target.metadata[8]) {
+                    end();
+                    resolve(3); // target dead
+                }
+            }, 0);
+    }
     });
 }
 
 function processChat(username, message, bot) {
+    if (username === bot.mf.username) return
+    const defaultMove = new Movements(bot.mf, bot.temp.mcData);
+    const target = bot.mf.players[username] ? bot.mf.players[username].entity : null
+    if (message === 'come') {
+      if (!target) {
+        bot.mf.chat('I don\'t see you !')
+        return
+      }
+      const p = target.position
+      bot.temp.lookAround =false;
+      bot.mf.pathfinder.setMovements(defaultMove)
+      bot.mf.pathfinder.setGoal(new GoalNear(p.x, p.y, p.z, 1));
+    }
 }
 
 function getRandomNearbyEntity (type, bot) {
