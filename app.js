@@ -58,7 +58,6 @@ var terminator = {
                 terminator.bots[id].temp.isReady = true;
                 terminator.bots[id].mf.chat(`/register ${config.inGamePassword} ${config.inGamePassword}`);
                 terminator.bots[id].mf.chat(`/login ${config.inGamePassword}`);
-                terminator.bots[id].mf.chat("hello");
             }
         });
         terminator.bots[id].mf.on('chat', function(username, message) {
@@ -123,16 +122,13 @@ function terminateTarget (target, bot) {
         if (target.username) {
             if (!bot.mf.entities[target] && !bot.mf.players[target.username]) {
                 resolve(2); // out of range / can't see target
-                bot.mf.chat("can't see target")
             }
         }
-            bot.mf.chat("ouch")
             var end = function () {
                 clearInterval(useWeapon);
                 clearInterval(checkCompletion);
                 bot.mf.pathfinder.stop();
                 bot.temp.lookAround = true;
-                bot.mf.chat("stopped")
             }
             bot.temp.lookAround = false;
             bot.temp.onMission = true;
