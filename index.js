@@ -25,25 +25,29 @@ const conKeys = {
 			"leather_helmet",
 			"iron_helmet",
 			"golden_helmet",
-			"diamond_helmet"
+			"diamond_helmet",
+			"netherite_helmet"
 		],
 		chestplate: [ // low priority to high priority
 			"leather_chestplate",
 			"iron_chestplate",
 			"golden_chestplate",
-			"diamond_chestplate"
+			"diamond_chestplate",
+			"netherite_chestplate"
 		],
 		leggings: [ // low priority to high priority
 			"leather_leggings",
 			"iron_leggings",
 			"golden_leggings",
-			"diamond_leggings"
+			"diamond_leggings",
+			"netherite_leggings
 		],
 		boots: [ // low priority to high priority
 			"leather_boots",
 			"iron_boots",
 			"golden_boots",
-			"diamond_boots"
+			"diamond_boots",
+			"netherite_boots"
 		],
 		food: [ // low priority to high priority
 			"sweet_berries",
@@ -62,7 +66,9 @@ const conKeys = {
 			"golden_axe",
 			"golden_sword",
 			"diamond_sword",
-			"diamond_axe"
+			"diamond_axe",
+			"netherite_sword",
+			"netherite_axe"
 		]
 	}
 }
